@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>RFID Scanner</title>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-6">
+        <h1 class="text-2xl font-bold text-center mb-4">Post Center</h1>
+        <div class="flex justify-center mb-6">
+            <button id="inButton" class="bg-green-500 text-white px-6 py-2 mr-2 rounded hover:bg-green-600 focus:ring focus:ring-green-300">
+                IN
+            </button>
+            <button id="outButton" class="bg-red-500 text-white px-6 py-2 rounded hover:bg-red-600 focus:ring focus:ring-red-300">
+                OUT
+            </button>
+        </div>
+        <div id="loader" class="hidden flex justify-center mb-6">
+            <div class="loader border-t-4 border-blue-500 rounded-full w-8 h-8 animate-spin"></div>
+        </div>
+        <div id="results" class="bg-white shadow rounded p-4">
+            <h2 class="text-xl font-semibold mb-2">Scanned Data</h2>
+            <div id="message" class="text-center text-red-500 mb-4"></div>
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="border-b py-2 px-4">StampID</th>
+                        <th class="border-b py-2 px-4">Sender Name</th>
+                        <th class="border-b py-2 px-4">Sender Address</th>
+                        <th class="border-b py-2 px-4">Sender Pincode</th>
+                        <th class="border-b py-2 px-4">Sender Mobile</th>
+                        <th class="border-b py-2 px-4">Receiver Name</th>
+                        <th class="border-b py-2 px-4">Receiver Address</th>
+                        <th class="border-b py-2 px-4">Receiver Pincode</th>
+                        <th class="border-b py-2 px-4">Receiver Mobile</th>
+                        <th class="border-b py-2 px-4">InDate</th>
+                        <th class="border-b py-2 px-4">InTime</th>
+                        <th class="border-b py-2 px-4">OutDate</th>
+                        <th class="border-b py-2 px-4">OutTime</th>
+                        <th class="border-b py-2 px-4">Location</th>
+                    </tr>
+                </thead>                
+                <tbody id="dataTable" class="text-sm"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function handleOperation(operation) {
+            const loader = document.getElementById("loader");
+            const results = document.getElementById("results");
+            const table = document.getElementById("dataTable");
+    
+            loader.classList.remove("hidden");
+            results.classList.add("hidden");
+            table.innerHTML = ""; // Clear previous data
+    
+            const endpoint = operation === "IN" ? "/log_in" : "/log_out";
+    
+            try {
+                const response = await fetch(`http://127.0.0.1:5000${endpoint}`, { method: "POST" });
+                const data = await response.json();
+    
+                if (response.ok) {
+                    if (data.length === 0) {
+                        alert("No tags scanned.");
+                    } else {
+                        data.forEach(item => {
+                            const row = document.createElement("tr");
+                            row.innerHTML = `
+                                <td class="border-b py-2 px-4">${item.TagID || "N/A"}</td>
+                                <td class="border-b py-2 px-4">${item.SenderName || "N/A"}</td>
+                                <td class="border-b py-2 px-4">${item.SenderAddress || "N/A"}</td>
+                                <td class="border-b py-2 px-4">${item.SenderPincode || "N/A"}</td>
+                                <td class="border-b py-2 px-4">${item.SenderMobile || "N/A"}</td>
+                                <td class="border-b py-2 px-4">${item.ReceiverName || "N/A"}</td>
+                                <td class="border-b py-2 px-4">${item.ReceiverAddress || "N/A"}</td>
+                                <td class="border-b py-2 px-4">${item.ReceiverPincode || "N/A"}</td>
+                                <td class="border-b py-2 px-4">${item.ReceiverMobile || "N/A"}</td>
+                                <td class="border-b py-2 px-4">${item.InDate || "N/A"}</td>
+                                <td class="border-b py-2 px-4">${item.InTime || "N/A"}</td>
+                                <td class="border-b py-2 px-4">${item.OutDate || "N/A"}</td>
+                                <td class="border-b py-2 px-4">${item.OutTime || "N/A"}</td>
+                                <td class="border-b py-2 px-4">${item.Location || "N/A"}</td>
+                            `;
+                            table.appendChild(row);
+                        });
+                    }
+                } else {
+                    alert(data.error || `Failed to ${operation}`);
+                }
+            } catch (error) {
+                console.error(`Error during ${operation}:`, error);
+                alert(`An error occurred while performing ${operation}. Please try again.`);
+            } finally {
+                loader.classList.add("hidden");
+                results.classList.remove("hidden");
+            }
+        }
+    
+        document.getElementById("inButton").addEventListener("click", () => {
+            handleOperation("IN");
+        });
+    
+        document.getElementById("outButton").addEventListener("click", () => {
+            handleOperation("OUT");
+        });
+    </script>    
+    <style>
+        .loader {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: currentColor;
+        }
+    </style>
+</body>
+</html>

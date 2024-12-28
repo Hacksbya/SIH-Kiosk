@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>RFID Scanner</title>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-6">
+        <h1 class="text-2xl font-bold text-center mb-4">Post Center</h1>
+        <div class="flex justify-center mb-6">
+            <button id="inButton" class="bg-green-500 text-white px-6 py-2 mr-2 rounded hover:bg-green-600 focus:ring focus:ring-green-300">
+                IN
+            </button>
+            <button id="outButton" class="bg-red-500 text-white px-6 py-2 rounded hover:bg-red-600 focus:ring focus:ring-red-300">
+                OUT
+            </button>
+        </div>
+        <div id="loader" class="hidden flex justify-center mb-6">
+            <div class="loader border-t-4 border-blue-500 rounded-full w-8 h-8 animate-spin"></div>
+        </div>
+        <div id="results" class="bg-white shadow rounded p-4">
+            <h2 class="text-xl font-semibold mb-2">Scanned Data</h2>
+            <div id="message" class="text-center text-red-500 mb-4"></div>
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="border-b py-2 px-4">StampID</th>
+                        <th class="border-b py-2 px-4">Sender Name</th>
+                        <th class="border-b py-2 px-4">Sender Address</th>
+                        <th class="border-b py-2 px-4">Sender Pincode</th>
+                        <th class="border-b py-2 px-4">Sender Mobile</th>
+                        <th class="border-b py-2 px-4">Receiver Name</th>
+                        <th class="border-b py-2 px-4">Receiver Address</th>
+                        <th class="border-b py-2 px-4">Receiver Pincode</th>
+                        <th class="border-b py-2 px-4">Receiver Mobile</th>
+                        <th class="border-b py-2 px-4">InDate</th>
+                        <th class="border-b py-2 px-4">InTime</th>
+                        <th class="border-b py-2 px-4">OutDate</th>
+                        <th class="border-b py-2 px-4">OutTime</th>
+                        <th class="border-b py-2 px-4">Location</th>
+                    </tr>
+                </thead>                
+                <tbody id="dataTable" class="text-sm"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const dummyData = [
+            {
+                TagID: "12345",
+                SenderName: "John Doe",
+                SenderAddress: "123 Elm Street",
+                SenderPincode: "110001",
+                SenderMobile: "9876543210",
+                ReceiverName: "Jane Smith",
+                ReceiverAddress: "456 Oak Avenue",
+                ReceiverPincode: "110002",
+                ReceiverMobile: "9123456780",
+                InDate: "",
+                InTime: "",
+                OutDate: "",
+                OutTime: "",
+                Location: "Warehouse A",
+            },
+            {
+                TagID: "67890",
+                SenderName: "Alice Brown",
+                SenderAddress: "789 Pine Street",
+                SenderPincode: "110003",
+                SenderMobile: "8765432190",
+                ReceiverName: "Bob White",
+                ReceiverAddress: "321 Cedar Lane",
+                ReceiverPincode: "110004",
+                ReceiverMobile: "9212345678",
+                InDate: "",
+                InTime: "",
+                OutDate: "",
+                OutTime: "",
+                Location: "Warehouse B",
+            },
+            {
+                TagID: "54321",
+                SenderName: "Charlie Green",
+                SenderAddress: "222 Birch Road",
+                SenderPincode: "110005",
+                SenderMobile: "7654321980",
+                ReceiverName: "Dana Black",
+                ReceiverAddress: "654 Maple Drive",
+                ReceiverPincode: "110006",
+                ReceiverMobile: "9321456789",
+                InDate: "",
+                InTime: "",
+                OutDate: "",
+                OutTime: "",
+                Location: "Warehouse C",
+            },
+        ];
+
+        function displayData(operation) {
+            const loader = document.getElementById("loader");
+            const results = document.getElementById("results");
+            const table = document.getElementById("dataTable");
+
+            loader.classList.remove("hidden");
+            results.classList.add("hidden");
+            table.innerHTML = ""; // Clear previous data
+
+            setTimeout(() => {
+                const baseTime = new Date(); // Start time
+
+                dummyData.forEach((item, index) => {
+                    const adjustedTime = new Date(baseTime.getTime() + index * 1000); // Add 5 seconds per index
+                    const date = adjustedTime.toISOString().split("T")[0]; // Format: YYYY-MM-DD
+                    const time = adjustedTime.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+
+                    if (operation === "IN") {
+                        item.InDate = date;
+                        item.InTime = time;
+                        item.OutDate = "N/A";
+                        item.OutTime = "N/A";
+                    } else if (operation === "OUT") {
+                        item.OutDate = date;
+                        item.OutTime = time;
+                    }
+
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td class="border-b py-2 px-4">${item.TagID}</td>
+                        <td class="border-b py-2 px-4">${item.SenderName}</td>
+                        <td class="border-b py-2 px-4">${item.SenderAddress}</td>
+                        <td class="border-b py-2 px-4">${item.SenderPincode}</td>
+                        <td class="border-b py-2 px-4">${item.SenderMobile}</td>
+                        <td class="border-b py-2 px-4">${item.ReceiverName}</td>
+                        <td class="border-b py-2 px-4">${item.ReceiverAddress}</td>
+                        <td class="border-b py-2 px-4">${item.ReceiverPincode}</td>
+                        <td class="border-b py-2 px-4">${item.ReceiverMobile}</td>
+                        <td class="border-b py-2 px-4">${item.InDate}</td>
+                        <td class="border-b py-2 px-4">${item.InTime}</td>
+                        <td class="border-b py-2 px-4">${item.OutDate}</td>
+                        <td class="border-b py-2 px-4">${item.OutTime}</td>
+                        <td class="border-b py-2 px-4">${item.Location}</td>
+                    `;
+                    table.appendChild(row);
+                });
+
+                loader.classList.add("hidden");
+                results.classList.remove("hidden");
+            }, 1000); // Simulate loading time
+        }
+
+        document.getElementById("inButton").addEventListener("click", () => {
+            displayData("IN");
+        });
+
+        document.getElementById("outButton").addEventListener("click", () => {
+            displayData("OUT");
+        });
+    </script>    
+    <style>
+        .loader {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: currentColor;
+        }
+    </style>
+</body>
+</html>
